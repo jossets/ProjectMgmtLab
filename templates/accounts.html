@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Comptes — ProjectMgr{% endblock %}
+{% block nav %}<a href="/">Accueil</a>{% include "_nav.html" %}{% endblock %}
+{% block content %}
+  <section class="accounts-page">
+    <h1>Comptes</h1>
+
+    <div class="accounts-card">
+      <h2>Nouveau compte</h2>
+      <form method="post" action="/accounts/teachers" class="inline-form-stack">
+        <label>
+          Identifiant
+          <input type="text" name="username" minlength="3" maxlength="50" pattern="[A-Za-z0-9_.\-]+" required />
+        </label>
+        <label>
+          Mot de passe
+          <input type="password" name="password" minlength="8" maxlength="200" required />
+        </label>
+        <label>
+          Rôle
+          <select name="role">
+            <option value="teacher">Enseignant</option>
+            <option value="student">Élève</option>
+          </select>
+        </label>
+        <button type="submit" class="primary-btn">Créer</button>
+      </form>
+    </div>
+
+    <div class="accounts-card">
+      <h2>Enseignants</h2>
+      <table class="accounts-table">
+        <thead><tr><th>Identifiant</th><th>Statut</th><th></th></tr></thead>
+        <tbody>
+          {% for t in teachers %}
+          <tr>
+            <td>{{ t.username }}</td>
+            <td>{{ "Bloqué" if t.blocked else "Actif" }}</td>
+            <td>
+              {% if t.id != identity.id %}
+              <form method="post" action="/accounts/{{ t.id }}/{{ 'unblock' if t.blocked else 'block' }}" class="inline-form">
+                <button type="submit" class="link-btn">{{ "Débloquer" if t.blocked else "Bloquer" }}</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="accounts-card">
+      <h2>Élèves</h2>
+      <table class="accounts-table">
+        <thead><tr><th>Identifiant</th><th>Statut</th><th></th></tr></thead>
+        <tbody>
+          {% for s in students %}
+          <tr>
+            <td>{{ s.username }}</td>
+            <td>{{ "Bloqué" if s.blocked else "Actif" }}</td>
+            <td>
+              <form method="post" action="/accounts/{{ s.id }}/{{ 'unblock' if s.blocked else 'block' }}" class="inline-form">
+                <button type="submit" class="link-btn">{{ "Débloquer" if s.blocked else "Bloquer" }}</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if identity.is_admin %}
+    <div class="accounts-card">
+      <h2>Sauvegarde de la base de données</h2>
+      <p><a href="/admin/backup" class="primary-btn">Télécharger une sauvegarde</a></p>
+
+      <h3>Restaurer une sauvegarde</h3>
+      <p class="admin-warning">
+        Attention : remplace immédiatement toutes les données actuelles (comptes, sessions, tableaux, Gantt, Kanban, QCM...)
+        par le contenu du fichier. Une copie de la base actuelle est conservée sur le serveur avant remplacement.
+      </p>
+      <form id="restore-form" method="post" action="/admin/restore" enctype="multipart/form-data" class="inline-form-stack">
+        <label>
+          Fichier de sauvegarde (.db)
+          <input type="file" name="file" accept=".db" required />
+        </label>
+        <button type="submit" class="primary-btn">Restaurer</button>
+      </form>
+    </div>
+    {% endif %}
+  </section>
+  <script src="/static/js/admin.js"></script>
+{% endblock %}

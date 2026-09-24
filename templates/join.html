@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Rejoindre {{ session.name }} — ProjectMgr{% endblock %}
+{% block nav %}<a href="/">Accueil</a>{% include "_nav.html" %}{% endblock %}
+{% block content %}
+  <section class="login-box">
+    <h1>Rejoindre « {{ session.name }} »</h1>
+    {% if not session.active %}
+      <p class="error">Cette session est actuellement bloquée par l'enseignant.</p>
+    {% endif %}
+
+    {% if identity.is_authenticated %}
+      <form method="post" action="/join/{{ session.id }}">
+        <button type="submit" class="primary-btn">Rejoindre cette session</button>
+      </form>
+    {% else %}
+      <h2>J'ai déjà un compte</h2>
+      <form method="post" action="/login">
+        <input type="hidden" name="next" value="/join/{{ session.id }}" />
+        <label>
+          Identifiant
+          <input type="text" name="username" autocomplete="username" required />
+        </label>
+        <label>
+          Mot de passe
+          <input type="password" name="password" autocomplete="current-password" required />
+        </label>
+        <button type="submit" class="primary-btn">Se connecter et rejoindre</button>
+      </form>
+
+      {% if session.allow_new_accounts %}
+      <h2>Créer un compte élève</h2>
+      <form method="post" action="/join/{{ session.id }}/create-account">
+        <label>
+          Identifiant
+          <input type="text" name="username" minlength="3" maxlength="50" pattern="[A-Za-z0-9_.\-]+" required />
+        </label>
+        <label>
+          Mot de passe
+          <input type="password" name="password" minlength="8" maxlength="200" required />
+        </label>
+        <button type="submit" class="primary-btn">Créer mon compte et rejoindre</button>
+      </form>
+      {% endif %}
+    {% endif %}
+  </section>
+{% endblock %}

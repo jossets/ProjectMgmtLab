@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ board.name }} — Tableau blanc{% endblock %}
+{% block nav %}<a href="/">Accueil</a>{% include "_nav.html" %}{% endblock %}
+{% block content %}
+  <section class="whiteboard-page" data-whiteboard-id="{{ board.id }}">
+    <div class="whiteboard-header">
+      <input type="text" id="whiteboard-name" value="{{ board.name }}" />
+      <span id="wb-status" class="save-status"></span>
+      <div class="wb-pencil-controls">
+        <button type="button" id="wb-tool-pencil-btn" class="icon-btn" title="Outil crayon (dessiner un trait à main levée)">✏️</button>
+        <button type="button" id="wb-tool-line-btn" class="icon-btn" title="Outil trait droit (clic pour un bout, clic pour l'autre — Maj = angles de 10°)">／</button>
+        <input type="color" id="wb-pencil-color" value="#1f2430" title="Couleur du trait" />
+        <input type="number" id="wb-pencil-width" class="wb-tb-input" min="1" max="40" value="3" title="Épaisseur du trait" />
+      </div>
+      <button type="button" id="wb-add-text-btn" class="primary-btn icon-only" title="Ajouter un bloc de texte">🔤</button>
+      <button type="button" id="wb-add-image-btn" class="primary-btn icon-only" title="Ajouter une image (ou coller / glisser-déposer un fichier)">🖼️</button>
+      <input type="file" id="wb-image-file-input" accept="image/png,image/jpeg,image/webp,image/gif" hidden />
+      <button type="button" id="wb-add-table-btn" class="primary-btn icon-only" title="Ajouter un tableau">▦</button>
+      <button type="button" id="wb-zoom-fit-btn" class="icon-btn" title="Vue d'ensemble (zoom pour tout voir)">⛶</button>
+      <button type="button" id="history-btn" class="icon-btn" title="Voir l'historique des modifications">🕘 Historique</button>
+    </div>
+    <div id="wb-viewport" class="wb-viewport">
+      <div id="wb-canvas" class="wb-canvas"></div>
+    </div>
+  </section>
+  <script src="/static/js/history-panel.js"></script>
+  <script src="/static/js/whiteboard.js"></script>
+{% endblock %}

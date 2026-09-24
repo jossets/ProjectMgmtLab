@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}{{ session.name }} — Session{% endblock %}
+{% block nav %}{% include "_nav.html" %}{% endblock %}
+{% block content %}
+  <section class="accounts-page">
+    <h1>{{ session.name }}</h1>
+    <p>Enseignant : {{ teacher_username }}</p>
+
+    {% if is_owner %}
+    <div class="accounts-card">
+      <h2>Paramètres</h2>
+      <form method="post" action="/sessions/{{ session.id }}/rename" class="inline-form-stack">
+        <label>
+          Nom
+          <input type="text" name="name" value="{{ session.name }}" maxlength="200" required />
+        </label>
+        <button type="submit" class="primary-btn">Renommer</button>
+      </form>
+
+      <p>
+        Statut : <strong>{{ "Active" if session.active else "Bloquée" }}</strong>
+        <form method="post" action="/sessions/{{ session.id }}/toggle-active" class="inline-form">
+          <button type="submit" class="link-btn">{{ "Bloquer" if session.active else "Activer" }}</button>
+        </form>
+      </p>
+
+      <p>
+        Création de compte via le lien : <strong>{{ "Autorisée" if session.allow_new_accounts else "Désactivée" }}</strong>
+        <form method="post" action="/sessions/{{ session.id }}/toggle-signups" class="inline-form">
+          <button type="submit" class="link-btn">{{ "Désactiver" if session.allow_new_accounts else "Autoriser" }}</button>
+        </form>
+      </p>
+
+      <p>Lien d'invitation : <a href="/join/{{ session.id }}">/join/{{ session.id }}</a> (code : <strong>{{ session.id }}</strong>)</p>
+    </div>
+    {% else %}
+    <div class="accounts-card">
+      <p>Statut : <strong>{{ "Active" if session.active else "Bloquée" }}</strong></p>
+    </div>
+    {% endif %}
+
+    <div class="accounts-card">
+      <h2>Cours</h2>
+      <p><a href="/sessions/{{ session.id }}/cours" class="primary-btn">Ouvrir la page cours</a></p>
+      {% if is_owner and qcm_sessions %}
+      <h3>QCM lancés</h3>
+      <ul>
+        {% for qs in qcm_sessions %}
+        <li>
+          <a href="/sessions/{{ session.id }}/qcm/{{ qs.id }}/results">{{ qs.chapter_title }}</a>
+          — {{ {"pending": "en attente", "running": "en cours", "ended": "terminé"}.get(qs.status, qs.status) }}
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+
+    <div class="accounts-card">
+      <h2>Outils de la session</h2>
+      <ul>
+        {% for g in gantts %}
+        <li>
+          <a href="/gantt/{{ g.id }}">{{ g.name }}</a> (Gantt)
+          {% if is_owner %}
+          <form method="post" action="/sessions/{{ session.id }}/detach" class="inline-form">
+            <input type="hidden" name="tool_type" value="gantt" />
+            <input type="hidden" name="tool_id" value="{{ g.id }}" />
+            <button type="submit" class="link-btn">Détacher</button>
+          </form>
+          {% endif %}
+        </li>
+        {% endfor %}
+        {% for w in whiteboards %}
+        <li>
+          <a href="/whiteboard/{{ w.id }}">{{ w.name }}</a> (Tableau blanc)
+          {% if is_owner %}
+          <form method="post" action="/sessions/{{ session.id }}/detach" class="inline-form">
+            <input type="hidden" name="tool_type" value="whiteboard" />
+            <input type="hidden" name="tool_id" value="{{ w.id }}" />
+            <button type="submit" class="link-btn">Détacher</button>
+          </form>
+          {% endif %}
+        </li>
+        {% endfor %}
+        {% for k in kanbans %}
+        <li>
+          <a href="/kanban/{{ k.id }}">{{ k.name }}</a> (Kanban)
+          {% if is_owner %}
+          <form method="post" action="/sessions/{{ session.id }}/detach" class="inline-form">
+            <input type="hidden" name="tool_type" value="kanban" />
+            <input type="hidden" name="tool_id" value="{{ k.id }}" />
+            <button type="submit" class="link-btn">Détacher</button>
+          </form>
+          {% endif %}
+        </li>
+        {% endfor %}
+        {% if not gantts and not whiteboards and not kanbans %}
+        <li>Aucun outil pour l'instant.</li>
+        {% endif %}
+      </ul>
+
+      {% if is_owner %}
+      <h3>Créer un nouvel outil rattaché à cette session</h3>
+      <form method="post" action="/gantt/new" class="inline-form">
+        <input type="hidden" name="session_id" value="{{ session.id }}" />
+        <button type="submit" class="primary-btn">+ Gantt</button>
+      </form>
+      <form method="post" action="/whiteboard/new" class="inline-form">
+        <input type="hidden" name="session_id" value="{{ session.id }}" />
+        <button type="submit" class="primary-btn">+ Tableau blanc</button>
+      </form>
+      <form method="post" action="/kanban/new" class="inline-form">
+        <input type="hidden" name="session_id" value="{{ session.id }}" />
+        <button type="submit" class="primary-btn">+ Kanban</button>
+      </form>
+
+      <h3>Rattacher un outil existant</h3>
+      <form method="post" action="/sessions/{{ session.id }}/attach" class="inline-form-stack">
+        <label>
+          Type
+          <select name="tool_type">
+            <option value="gantt">Gantt</option>
+            <option value="whiteboard">Tableau blanc</option>
+            <option value="kanban">Kanban</option>
+          </select>
+        </label>
+        <label>
+          Identifiant (dans l'url de l'outil)
+          <input type="text" name="tool_id" pattern="[0-9a-f]{32}" maxlength="32" required />
+        </label>
+        <button type="submit" class="primary-btn">Rattacher</button>
+      </form>
+      {% endif %}
+    </div>
+
+    {% if is_owner %}
+    <div class="accounts-card">
+      <h2>Membres</h2>
+      <table class="accounts-table">
+        <thead><tr><th>Élève</th><th></th></tr></thead>
+        <tbody>
+          {% for m in members %}
+          <tr>
+            <td>{{ m.username }}</td>
+            <td>
+              <form method="post" action="/sessions/{{ session.id }}/members/{{ m.id }}/remove" class="inline-form">
+                <button type="submit" class="link-btn">Retirer</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="2">Aucun élève pour l'instant.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% if available_students %}
+      <h3>Ajouter un élève</h3>
+      <form method="post" action="/sessions/{{ session.id }}/members" class="inline-form-stack">
+        <label>
+          Élève
+          <select name="user_id">
+            {% for s in available_students %}
+            <option value="{{ s.id }}">{{ s.username }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <button type="submit" class="primary-btn">Ajouter</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endif %}
+  </section>
+{% endblock %}

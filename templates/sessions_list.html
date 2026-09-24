@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Sessions — ProjectMgr{% endblock %}
+{% block nav %}<a href="/">Accueil</a>{% include "_nav.html" %}{% endblock %}
+{% block content %}
+  <section class="accounts-page">
+    <h1>Sessions de cours</h1>
+
+    <div class="accounts-card">
+      <form method="post" action="/sessions/new" class="inline-form">
+        <button type="submit" class="primary-btn">+ Nouvelle session</button>
+      </form>
+    </div>
+
+    <div class="accounts-card">
+      <table class="accounts-table">
+        <thead><tr><th>Nom</th><th>Code</th><th>Statut</th></tr></thead>
+        <tbody>
+          {% for s in sessions %}
+          <tr>
+            <td><a href="/sessions/{{ s.id }}">{{ s.name }}</a></td>
+            <td>{{ s.id }}</td>
+            <td>{{ "Active" if s.active else "Bloquée" }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3">Aucune session pour l'instant.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

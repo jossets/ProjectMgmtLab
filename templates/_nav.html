@@ -1,0 +1,16 @@
+{% if identity and identity.is_authenticated %}
+  {% if identity.is_teacher %}
+    <a href="/sessions">Sessions</a>
+    <a href="/accounts">Comptes</a>
+  {% endif %}
+  {% if identity.is_admin %}
+    <button type="button" id="presence-toggle-btn" class="icon-btn" title="Voir qui est connecté">👀 Présence</button>
+  {% endif %}
+  <a href="/profile">Mon profil</a>
+  <span class="admin-badge">{{ identity.user.username if identity.user else "admin" }} connecté</span>
+  <form method="post" action="/logout" class="inline-form">
+    <button type="submit" class="link-btn">Se déconnecter</button>
+  </form>
+{% else %}
+  <a href="/login">Connexion</a>
+{% endif %}

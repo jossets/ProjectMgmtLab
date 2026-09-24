@@ -1,0 +1,57 @@
+# Déploiement derrière le Traefik existant (traefik.yml), exposé sur
+# https://projects.yolospacehacker.com
+#
+# Valeurs alignées sur ce Traefik précis (entrypoints http/https, resolver
+# "letencrypt", réseau externe traefik_lan) — si ce Traefik est un jour
+# reconfiguré différemment, ajuster les labels ci-dessous en conséquence.
+# Pas de routeur/middleware de redirection HTTP->HTTPS ici : l'entrypoint
+# "http" de ce Traefik redirige déjà tout vers "https" au niveau global
+# (voir entryPoints.http.http.redirections dans traefik.yml), un routeur
+# dédié ferait doublon.
+#
+# Prérequis :
+#   - Un fichier .env à la racine (copie de .env.example) avec au minimum
+#     ADMIN_USERNAME / ADMIN_PASSWORD / SECRET_KEY définis (pas les valeurs
+#     par défaut de l'exemple).
+#
+# Un seul worker/une seule réplica : les rooms WebSocket (tableau blanc,
+# Kanban) et le rate-limiting du login vivent en mémoire du process, pas
+# dans un stockage partagé — voir Dockerfile et Readme.md. Ne pas monter
+# `deploy.replicas` au-delà de 1 sans déplacer cet état ailleurs (Redis...).
+
+services:
+  projectmgr:
+    build: .
+    # image: projects.yolospacehacker.com/projectmgr:latest  # à utiliser à la place de `build:` une fois une image poussée dans un registre
+    container_name: projectmgr
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # forcé ici quel que soit .env : ce compose sert justement le déploiement HTTPS derrière Traefik
+      SESSION_HTTPS_ONLY: "true"
+    volumes:
+      - projectmgr-data:/app/data
+    networks:
+      - traefik_lan
+    deploy:
+      replicas: 1
+    labels:
+      - "traefik.enable=true"
+
+      - "traefik.http.routers.projectmgr.rule=Host(`projects.yolospacehacker.com`)"
+      - "traefik.http.routers.projectmgr.entrypoints=https"
+      - "traefik.http.routers.projectmgr.tls=true"
+      - "traefik.http.routers.projectmgr.tls.certresolver=letencrypt"
+
+      # port interne du conteneur (voir EXPOSE dans le Dockerfile) — Traefik
+      # y accède via le réseau docker partagé, pas de port publié sur l'hôte
+      - "traefik.http.services.projectmgr.loadbalancer.server.port=8000"
+
+volumes:
+  projectmgr-data:
+
+networks:
+  traefik_lan:
+    external: true
+    name: traefik_lan # doit correspondre au réseau externe utilisé par ton Traefik

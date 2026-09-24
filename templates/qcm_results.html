@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Résultats QCM — {{ qs.chapter_title }}{% endblock %}
+{% block nav %}<a href="/sessions/{{ session.id }}/cours">{{ session.name }}</a>{% include "_nav.html" %}{% endblock %}
+{% block content %}
+  <section class="accounts-page">
+    <h1>Résultats — {{ qs.chapter_title }}</h1>
+    <p>Statut : <strong>{{ {"pending": "En attente", "running": "En cours", "ended": "Terminé"}.get(qs.status, qs.status) }}</strong></p>
+
+    <div class="accounts-card">
+      <h2>Par question</h2>
+      {% for q in question_stats %}
+      <div class="qcm-result-question">
+        <h3>{{ q.label }}</h3>
+        <p>{{ q.text }}</p>
+        <ul class="qcm-result-options">
+          {% for o in q.options %}
+          <li class="{{ 'correct' if o.correct else '' }}">
+            {{ '✓' if o.correct else '✕' }} {{ o.text }} — {{ o.count }} réponse{{ 's' if o.count != 1 else '' }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% else %}
+      <p>Aucune question.</p>
+      {% endfor %}
+    </div>
+
+    <div class="accounts-card">
+      <h2>Par élève</h2>
+      <table class="accounts-table">
+        <thead><tr><th>Élève</th><th>Répondu</th><th>Score</th></tr></thead>
+        <tbody>
+          {% for row in student_rows %}
+          <tr>
+            <td>{{ row.username }}</td>
+            <td>{{ row.answered }} / {{ row.total }}</td>
+            <td>{{ row.score }} / {{ row.total }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3">Aucun élève dans cette session.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

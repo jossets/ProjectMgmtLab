@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}ProjectMgr — Accueil{% endblock %}
+{% block nav %}{% include "_nav.html" %}{% endblock %}
+{% block content %}
+  <section class="hero">
+    <h1>Outils de gestion de projet</h1>
+    <p>Créez un diagramme de Gantt, un tableau blanc ou un Kanban et partagez le lien librement.</p>
+    <form method="post" action="/gantt/new" class="inline-form">
+      <button type="submit" class="primary-btn">Nouveau Gantt</button>
+    </form>
+    <form method="post" action="/whiteboard/new" class="inline-form">
+      <button type="submit" class="primary-btn">Nouveau tableau blanc</button>
+    </form>
+    <form method="post" action="/kanban/new" class="inline-form">
+      <button type="submit" class="primary-btn">Nouveau Kanban</button>
+    </form>
+  </section>
+
+  {% if identity.user and identity.user.role == "student" %}
+  <section class="accounts-card">
+    <h2>Mes sessions</h2>
+    <table class="accounts-table">
+      <thead><tr><th>Nom</th><th>Statut</th></tr></thead>
+      <tbody>
+        {% for s in sessions %}
+        <tr>
+          <td><a href="/sessions/{{ s.id }}">{{ s.name }}</a></td>
+          <td>{{ "Active" if s.active else "Bloquée" }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="2">Vous n'avez rejoint aucune session pour l'instant.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+{% endblock %}

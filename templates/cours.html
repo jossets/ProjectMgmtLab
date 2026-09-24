@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ session.name }} — Cours{% endblock %}
+{% block nav %}<a href="/sessions/{{ session.id }}">{{ session.name }}</a>{% include "_nav.html" %}{% endblock %}
+{% block content %}
+  <section class="cours-page" data-session-id="{{ session.id }}" data-is-owner="{{ '1' if is_owner else '0' }}">
+    <script type="application/json" id="cours-init-data">
+      {{ {"topics": topics, "presentation": presentation, "content": content, "qcm_available": qcm_available, "active_qcm_state": active_qcm_state} | tojson }}
+    </script>
+
+    <div class="cours-layout">
+      <nav id="cours-tree" class="cours-tree"></nav>
+      <div class="cours-main">
+        <div id="cours-picker" class="cours-picker" hidden>
+          <h2>Choisir un cours à présenter</h2>
+          <ul id="cours-topic-list" class="cours-topic-list"></ul>
+        </div>
+        <div id="cours-waiting" class="cours-waiting" hidden>
+          <p>En attente que l'enseignant démarre un cours.</p>
+        </div>
+        <div id="cours-slide-wrap" class="cours-slide-wrap" hidden>
+          <div class="cours-slide-header">
+            <span id="cours-doc-title" class="cours-doc-title"></span>
+            <button type="button" id="cours-change-topic-btn" class="icon-btn" hidden>Changer de cours</button>
+          </div>
+          <div id="cours-resync-banner" class="cours-resync-banner" hidden>
+            <span>L'enseignant est sur une autre diapositive.</span>
+            <button type="button" id="cours-resync-btn" class="primary-btn">Suivre</button>
+          </div>
+          <article id="cours-slide" class="cours-slide"></article>
+        </div>
+      </div>
+    </div>
+  </section>
+  <script src="/static/js/cours.js"></script>
+{% endblock %}

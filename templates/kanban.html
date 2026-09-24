@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ board.name }} — Kanban{% endblock %}
+{% block nav %}<a href="/">Accueil</a>{% include "_nav.html" %}{% endblock %}
+{% block content %}
+  <section class="kanban-page" data-kanban-id="{{ board.id }}">
+    <div class="kanban-header">
+      <input type="text" id="kanban-name" value="{{ board.name }}" />
+      <span id="kanban-status" class="save-status"></span>
+      <button type="button" id="history-btn" class="icon-btn" title="Voir l'historique des modifications">🕘 Historique</button>
+      <button type="button" id="kanban-add-column-btn" class="primary-btn">+ Colonne</button>
+    </div>
+    <div id="kanban-board" class="kanban-board"></div>
+  </section>
+  <script src="/static/js/history-panel.js"></script>
+  <script src="/static/js/kanban.js"></script>
+{% endblock %}

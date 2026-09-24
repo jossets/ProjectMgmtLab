@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ gantt.name }} — Gantt{% endblock %}
+{% block nav %}<a href="/">Accueil</a>{% include "_nav.html" %}{% endblock %}
+{% block content %}
+  <section class="gantt-page" data-gantt-id="{{ gantt.id }}">
+    <div class="gantt-header">
+      <input type="text" id="gantt-name" value="{{ gantt.name }}" />
+      <span id="save-status" class="save-status"></span>
+      <div class="zoom-controls">
+        <button type="button" id="zoom-out-btn" class="icon-btn" title="Zoom arrière">−</button>
+        <span id="zoom-level" class="zoom-level">100%</span>
+        <button type="button" id="zoom-in-btn" class="icon-btn" title="Zoom avant">+</button>
+        <button type="button" id="zoom-fit-btn" class="icon-btn" title="Ajuster le zoom pour tout afficher">Ajuster à la largeur</button>
+        <button type="button" id="zoom-reset-btn" class="icon-btn" title="Revenir au zoom 100%">Réinitialiser le zoom</button>
+      </div>
+      <button type="button" id="export-png-btn" class="icon-btn" title="Exporter le Gantt en PNG (1920 px de large)">Exporter en PNG</button>
+      <button type="button" id="history-btn" class="icon-btn" title="Voir l'historique des modifications">🕘 Historique</button>
+      <button type="button" id="add-task-btn" class="primary-btn">+ Tâche</button>
+    </div>
+    <div id="gantt-scroll" class="gantt-scroll">
+      <table id="gantt-table" class="gantt-table"></table>
+    </div>
+  </section>
+  <script src="/static/js/history-panel.js"></script>
+  <script src="/static/js/gantt.js"></script>
+{% endblock %}
