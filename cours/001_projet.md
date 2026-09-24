@@ -136,6 +136,9 @@ Il donne une vision globale du fonctionnement du projet.
 Il peut être utilisé pour tester rapidement la cohérence d'une idée.
 C'est un outil de cadrage et de réflexion.
 
+![Business Model Canvas](img/businessmodelcanvas.png "Business Model Canvas")
+
+
 ## Qualité cout délai 
 
 Un projet doit généralement arbitrer entre plusieurs contraintes.
