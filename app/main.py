@@ -17,6 +17,7 @@ from app.routers import auth as auth_router
 from app.routers import cours as cours_router
 from app.routers import gantt as gantt_router
 from app.routers import kanban as kanban_router
+from app.routers import pages as pages_router
 from app.routers import presence as presence_router
 from app.routers import sessions as sessions_router
 from app.routers import whiteboard as whiteboard_router
@@ -47,6 +48,7 @@ app.include_router(auth_router.router)
 app.include_router(cours_router.router)
 app.include_router(gantt_router.router)
 app.include_router(kanban_router.router)
+app.include_router(pages_router.router)
 app.include_router(presence_router.router)
 app.include_router(sessions_router.router)
 app.include_router(whiteboard_router.router)

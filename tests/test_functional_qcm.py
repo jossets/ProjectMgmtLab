@@ -98,6 +98,66 @@ def test_student_validate_and_defer_answers(teacher_client, student_client):
             teacher_ws.receive_json()
 
 
+def test_student_skip_answer_on_timeout_with_nothing_checked(teacher_client, student_client):
+    # mirrors what the client sends when the per-question timer runs out
+    # and no checkbox was checked — distinct from an explicit "defer"
+    session_id = _new_session_id(teacher_client)
+    _join(student_client, session_id)
+
+    with teacher_client.websocket_connect(f"/ws/cours/{session_id}") as teacher_ws:
+        _select_topic(teacher_ws)
+        teacher_ws.send_json({"op": "qcm_prepare", "chapter_title": "Chapitre un"})
+        teacher_ws.receive_json()
+        teacher_ws.send_json({"op": "qcm_start"})
+        teacher_ws.receive_json()
+
+        with student_client.websocket_connect(f"/ws/cours/{session_id}") as student_ws:
+            teacher_ws.receive_json()
+            student_ws.receive_json()
+
+            student_ws.send_json({"op": "qcm_answer", "question_index": 0, "option_indices": [], "action": "skip"})
+            skip_msg = student_ws.receive_json()
+            assert skip_msg["op"] == "qcm_progress"
+            assert skip_msg["status"] == "skipped"
+
+            teacher_progress = teacher_ws.receive_json()
+            assert teacher_progress["question_index"] == 0
+            assert teacher_progress["status"] == "skipped"
+
+
+def test_student_skip_ignores_any_options_sent_alongside_it(teacher_client, student_client):
+    # the server always stores an empty selection for "skip", regardless of
+    # what option_indices a (buggy or malicious) client sends with it
+    session_id = _new_session_id(teacher_client)
+    _join(student_client, session_id)
+
+    with teacher_client.websocket_connect(f"/ws/cours/{session_id}") as teacher_ws:
+        _select_topic(teacher_ws)
+        teacher_ws.send_json({"op": "qcm_prepare", "chapter_title": "Chapitre un"})
+        teacher_ws.receive_json()
+        teacher_ws.send_json({"op": "qcm_start"})
+        teacher_ws.receive_json()
+
+        with student_client.websocket_connect(f"/ws/cours/{session_id}") as student_ws:
+            teacher_ws.receive_json()
+            student_ws.receive_json()
+
+            student_ws.send_json({"op": "qcm_answer", "question_index": 0, "option_indices": [0], "action": "skip"})
+            skip_msg = student_ws.receive_json()
+            assert skip_msg["status"] == "skipped"
+            teacher_ws.receive_json()
+
+    db = SessionLocal()
+    try:
+        from app.models import QcmAnswer
+
+        answer = db.query(QcmAnswer).filter_by(question_index=0).order_by(QcmAnswer.id.desc()).first()
+        assert answer.status == "skipped"
+        assert answer.selected_options == []
+    finally:
+        db.close()
+
+
 def test_owner_cannot_answer_and_student_cannot_drive(teacher_client, student_client):
     session_id = _new_session_id(teacher_client)
     _join(student_client, session_id)

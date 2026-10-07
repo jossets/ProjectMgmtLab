@@ -35,6 +35,9 @@ os.environ["PROJECTMGR_DATA_DIR"] = _tmp_data_dir
 os.environ["PROJECTMGR_COURSES_DIR"] = _tmp_courses_dir
 os.environ["PROJECTMGR_MAX_BACKUP_BYTES"] = str(2 * 1024 * 1024)  # 2 MB, small enough to test the limit cheaply
 os.environ["PROJECTMGR_MAX_WHITEBOARD_ELEMENTS"] = "5"  # small enough to test the limit cheaply
+os.environ["PROJECTMGR_MAX_PAGES_PER_BOARD"] = "5"  # small enough to test the limit cheaply
+os.environ["PROJECTMGR_MAX_PAGE_NESTING_DEPTH"] = "3"  # small enough to test the limit cheaply
+os.environ["PROJECTMGR_MAX_BLOCKS_PER_PAGE"] = "5"  # small enough to test the limit cheaply
 os.environ["ADMIN_USERNAME"] = "testadmin"
 os.environ["ADMIN_PASSWORD"] = "S3cur3-Test-Pass!"
 os.environ["SECRET_KEY"] = "test-secret-key-not-for-prod"
@@ -125,6 +128,13 @@ def whiteboard_id(client):
 @pytest.fixture()
 def kanban_id(client):
     resp = client.post("/kanban/new", follow_redirects=False)
+    location = resp.headers["location"]
+    return location.rsplit("/", 1)[-1]
+
+
+@pytest.fixture()
+def page_board_id(client):
+    resp = client.post("/pages/new", follow_redirects=False)
     location = resp.headers["location"]
     return location.rsplit("/", 1)[-1]
 

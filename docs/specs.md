@@ -36,6 +36,12 @@ Logiciel en mode serveur http tournant dans un navigateur, offrant toutes les fo
     - Un Kanban peut être affecté à une session (il est réservé aux membres de la session) ou à rien (il est accessible à toute personne ayant l'id du Kanban)
     - Colonnes avec titre
     - Post-it qui peut se décaller
+- Outil "Pages", de type notion.com, édition collaborative en temps réel
+    - Un espace Pages peut être affecté à une session (réservé aux membres) ou à rien (accessible à toute personne ayant l'id)
+    - Partie gauche : arbre hiérarchique de pages (créer, renommer, réordonner, indenter/désindenter, supprimer — la suppression d'une page emporte ses sous-pages, annulable intégralement depuis l'historique)
+    - Partie droite : la page sélectionnée, affichée comme une pile de blocs qui s'empilent verticalement (réordonnables un par un)
+    - Types de blocs : texte riche (gras/italique/souligné/barré, taille, listes à puces), image (upload), grille/tableau, lien (titre/description saisis à la main, pas de récupération automatique), code (avec choix du langage)
+    - Historique des actions et annulation des suppressions, comme les autres outils
 
 
 

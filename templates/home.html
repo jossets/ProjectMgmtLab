@@ -14,6 +14,9 @@
     <form method="post" action="/kanban/new" class="inline-form">
       <button type="submit" class="primary-btn">Nouveau Kanban</button>
     </form>
+    <form method="post" action="/pages/new" class="inline-form">
+      <button type="submit" class="primary-btn">Nouvelles Pages</button>
+    </form>
   </section>
 
   {% if identity.user and identity.user.role == "student" %}

@@ -82,6 +82,21 @@ def test_negative_option_index_rejected(teacher_client, student_client):
             assert student_ws.receive_json()["op"] == "error"
 
 
+def test_invalid_answer_action_rejected(teacher_client, student_client):
+    session_id = _new_session_id(teacher_client)
+    _join(student_client, session_id)
+    with teacher_client.websocket_connect(f"/ws/cours/{session_id}") as teacher_ws:
+        _select_and_prepare(teacher_ws)
+        teacher_ws.send_json({"op": "qcm_start"})
+        teacher_ws.receive_json()
+
+        with student_client.websocket_connect(f"/ws/cours/{session_id}") as student_ws:
+            teacher_ws.receive_json()
+            student_ws.receive_json()
+            student_ws.send_json({"op": "qcm_answer", "question_index": 0, "option_indices": [], "action": "give_up"})
+            assert student_ws.receive_json()["op"] == "error"
+
+
 def test_seconds_per_question_out_of_bounds_rejected(teacher_client):
     session_id = _new_session_id(teacher_client)
     with teacher_client.websocket_connect(f"/ws/cours/{session_id}") as ws:

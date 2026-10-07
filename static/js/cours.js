@@ -109,7 +109,15 @@
     questionTimerHandle = setInterval(() => {
       questionTimerRemaining -= 1;
       updateQuestionTimerUI();
-      if (questionTimerRemaining <= 0) submitCurrentAnswer('defer');
+      if (questionTimerRemaining <= 0) {
+        // timeout is terminal, unlike the explicit "Reporter à la fin"
+        // button: whatever's checked gets sent as if "Valider" had been
+        // pressed, and an empty selection is marked "skipped" rather than
+        // silently requeued — otherwise a student who never checks
+        // anything could loop on the same question forever
+        const anyChecked = qcmPanel.querySelector('.qcm-option-checkbox:checked') !== null;
+        submitCurrentAnswer(anyChecked ? 'validate' : 'skip');
+      }
     }, 1000);
   }
 
@@ -328,7 +336,8 @@
         for (let i = 0; i < qcmState.question_count; i++) {
           const td = document.createElement('td');
           const status = (m.progress || {})[String(i)];
-          td.textContent = status === 'validated' ? '✓' : status === 'deferred' ? '⏭' : '·';
+          const symbol = { validated: '✓', deferred: '⏭', skipped: 'Ø' }[status] || '·';
+          td.textContent = symbol;
           td.className = `qcm-cell qcm-cell-${status || 'not_seen'}`;
           tr.appendChild(td);
         }

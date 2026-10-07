@@ -8,7 +8,17 @@ from sqlalchemy.orm import Session
 
 from app.auth import Identity, get_identity, require_login_page, require_teacher_api, require_teacher_page
 from app.db import get_db
-from app.models import CourseSession, Gantt, KanbanBoard, QcmSession, SessionMembership, User, Whiteboard, generate_join_code
+from app.models import (
+    CourseSession,
+    Gantt,
+    KanbanBoard,
+    PageBoard,
+    QcmSession,
+    SessionMembership,
+    User,
+    Whiteboard,
+    generate_join_code,
+)
 from app.routers.auth import USERNAME_PATTERN
 from app.security import hash_password
 
@@ -20,8 +30,8 @@ SESSION_ID_RE = re.compile(r"^[A-Z0-9]{7}$")
 UserIdPath = Path(pattern=r"^[0-9a-f]{32}$")
 ToolIdPath = Path(pattern=r"^[0-9a-f]{32}$")
 
-TOOL_MODELS = {"gantt": Gantt, "whiteboard": Whiteboard, "kanban": KanbanBoard}
-TOOL_TYPE_PATTERN = r"^(gantt|whiteboard|kanban)$"
+TOOL_MODELS = {"gantt": Gantt, "whiteboard": Whiteboard, "kanban": KanbanBoard, "pages": PageBoard}
+TOOL_TYPE_PATTERN = r"^(gantt|whiteboard|kanban|pages)$"
 
 MAX_JOIN_CODE_ATTEMPTS = 5
 
@@ -125,6 +135,7 @@ def session_detail(
     gantts = db.query(Gantt).filter(Gantt.session_id == session.id).order_by(Gantt.created_at).all()
     whiteboards = db.query(Whiteboard).filter(Whiteboard.session_id == session.id).order_by(Whiteboard.created_at).all()
     kanbans = db.query(KanbanBoard).filter(KanbanBoard.session_id == session.id).order_by(KanbanBoard.created_at).all()
+    page_boards = db.query(PageBoard).filter(PageBoard.session_id == session.id).order_by(PageBoard.created_at).all()
     members = []
     available_students = []
     qcm_sessions = []
@@ -151,6 +162,7 @@ def session_detail(
             "gantts": gantts,
             "whiteboards": whiteboards,
             "kanbans": kanbans,
+            "page_boards": page_boards,
             "members": members,
             "available_students": available_students,
             "qcm_sessions": qcm_sessions,

@@ -21,6 +21,11 @@ def _new_gantt_id(client):
     return resp.headers["location"].rsplit("/", 1)[-1]
 
 
+def _new_page_board_id(client):
+    resp = client.post("/pages/new", follow_redirects=False)
+    return resp.headers["location"].rsplit("/", 1)[-1]
+
+
 def _other_teacher_client(admin_client):
     username = _uname("otherteacher")
     admin_client.post("/accounts/teachers", data={"username": username, "password": "Sup3rSecret!"}, follow_redirects=False)
@@ -79,6 +84,24 @@ def test_attach_rejects_tool_already_owned_by_another_teachers_session(admin_cli
     detail = teacher_client.get(f"/sessions/{victim_session_id}")
     assert gantt_id in detail.text
     assert intruder.get(f"/api/gantt/{gantt_id}").status_code == 403
+
+
+def test_attach_rejects_a_pages_board_already_owned_by_another_teachers_session(admin_client, teacher_client):
+    # same IDOR guard as gantt, exercised against the new "pages" tool type
+    victim_session_id = _new_session_id(teacher_client)
+    board_id = _new_page_board_id(teacher_client)
+    teacher_client.post(f"/sessions/{victim_session_id}/attach", data={"tool_type": "pages", "tool_id": board_id})
+
+    intruder = _other_teacher_client(admin_client)
+    intruder_session_id = _new_session_id(intruder)
+
+    resp = intruder.post(
+        f"/sessions/{intruder_session_id}/attach", data={"tool_type": "pages", "tool_id": board_id}
+    )
+    assert resp.status_code == 403
+
+    detail = teacher_client.get(f"/sessions/{victim_session_id}")
+    assert board_id in detail.text
 
 
 def test_attach_allows_an_orphan_tool_with_no_session(teacher_client):

@@ -49,7 +49,9 @@ class QcmAnswerMsg(BaseModel):
     op: str = Field(pattern="^qcm_answer$")
     question_index: int = Field(ge=0)
     option_indices: list[int] = Field(default_factory=list, max_length=50)
-    action: str = Field(pattern="^(validate|defer)$")
+    # "skip": the per-question timer ran out with nothing checked — distinct
+    # from "defer" (the student explicitly chose to come back to it later)
+    action: str = Field(pattern="^(validate|defer|skip)$")
 
 
 def get_session_or_404(session_id: str, db: Session) -> CourseSession:
@@ -498,8 +500,11 @@ async def handle_message(session_id: str, raw: str, db: Session, websocket: WebS
             if msg.action == "validate":
                 answer.status = "validated"
                 answer.selected_options = sorted(set(msg.option_indices))
-            else:
+            elif msg.action == "defer":
                 answer.status = "deferred"
+                answer.selected_options = []
+            else:  # "skip"
+                answer.status = "skipped"
                 answer.selected_options = []
             db.commit()
 

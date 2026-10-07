@@ -94,7 +94,19 @@
           {% endif %}
         </li>
         {% endfor %}
-        {% if not gantts and not whiteboards and not kanbans %}
+        {% for p in page_boards %}
+        <li>
+          <a href="/pages/{{ p.id }}">{{ p.name }}</a> (Pages)
+          {% if is_owner %}
+          <form method="post" action="/sessions/{{ session.id }}/detach" class="inline-form">
+            <input type="hidden" name="tool_type" value="pages" />
+            <input type="hidden" name="tool_id" value="{{ p.id }}" />
+            <button type="submit" class="link-btn">Détacher</button>
+          </form>
+          {% endif %}
+        </li>
+        {% endfor %}
+        {% if not gantts and not whiteboards and not kanbans and not page_boards %}
         <li>Aucun outil pour l'instant.</li>
         {% endif %}
       </ul>
@@ -113,6 +125,10 @@
         <input type="hidden" name="session_id" value="{{ session.id }}" />
         <button type="submit" class="primary-btn">+ Kanban</button>
       </form>
+      <form method="post" action="/pages/new" class="inline-form">
+        <input type="hidden" name="session_id" value="{{ session.id }}" />
+        <button type="submit" class="primary-btn">+ Pages</button>
+      </form>
 
       <h3>Rattacher un outil existant</h3>
       <form method="post" action="/sessions/{{ session.id }}/attach" class="inline-form-stack">
@@ -122,6 +138,7 @@
             <option value="gantt">Gantt</option>
             <option value="whiteboard">Tableau blanc</option>
             <option value="kanban">Kanban</option>
+            <option value="pages">Pages</option>
           </select>
         </label>
         <label>

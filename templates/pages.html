@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ board.name }} — Pages{% endblock %}
+{% block nav %}<a href="/">Accueil</a>{% include "_nav.html" %}{% endblock %}
+{% block content %}
+  <section class="pages-page" data-pages-board-id="{{ board.id }}">
+    <div class="pages-header">
+      <input type="text" id="pages-name" value="{{ board.name }}" />
+      <span id="pages-status" class="save-status"></span>
+      <button type="button" id="pages-add-root-btn" class="primary-btn icon-only" title="Ajouter une page à la racine">+ Page</button>
+      <button type="button" id="history-btn" class="icon-btn" title="Voir l'historique des modifications">🕘 Historique</button>
+    </div>
+    <div class="pages-body">
+      <nav id="pages-tree" class="pages-tree"></nav>
+      <main id="pages-content" class="pages-content"></main>
+    </div>
+    <input type="file" id="pages-image-file-input" accept="image/png,image/jpeg,image/webp,image/gif" hidden />
+  </section>
+  <script src="/static/js/history-panel.js"></script>
+  <script src="/static/js/pages.js"></script>
+{% endblock %}

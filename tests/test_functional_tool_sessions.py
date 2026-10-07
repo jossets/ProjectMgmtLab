@@ -25,6 +25,11 @@ def _new_kanban_id(client):
     return resp.headers["location"].rsplit("/", 1)[-1]
 
 
+def _new_page_board_id(client):
+    resp = client.post("/pages/new", follow_redirects=False)
+    return resp.headers["location"].rsplit("/", 1)[-1]
+
+
 def _join(student_client, session_id):
     resp = student_client.post(f"/join/{session_id}", follow_redirects=False)
     assert resp.status_code == 303
@@ -147,6 +152,25 @@ def test_attached_whiteboard_api_and_page_rejects_non_member(teacher_client, cli
     assert page.status_code == 303
     api = client.get(f"/api/whiteboard/{whiteboard_id}")
     assert api.status_code == 403
+
+
+def test_pages_board_can_be_attached_and_detached_like_the_other_tools(teacher_client, client):
+    # regression guard for the TOOL_MODELS/TOOL_TYPE_PATTERN wiring added
+    # for the new "pages" tool type — exercises the exact same generic
+    # attach/detach path already proven for gantt/whiteboard/kanban
+    session_id = _new_session_id(teacher_client)
+    board_id = _new_page_board_id(teacher_client)
+
+    teacher_client.post(f"/sessions/{session_id}/attach", data={"tool_type": "pages", "tool_id": board_id})
+    still_blocked = client.get(f"/pages/{board_id}", follow_redirects=False)
+    assert still_blocked.status_code == 303
+
+    detail = teacher_client.get(f"/sessions/{session_id}")
+    assert board_id in detail.text
+
+    teacher_client.post(f"/sessions/{session_id}/detach", data={"tool_type": "pages", "tool_id": board_id})
+    reopened = client.get(f"/pages/{board_id}")
+    assert reopened.status_code == 200
 
 
 def test_attached_gantt_history_follows_the_same_access_rules(client, teacher_client, student_client):

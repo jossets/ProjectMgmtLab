@@ -144,6 +144,52 @@ class KanbanCard(Base):
     column: Mapped["KanbanColumn"] = relationship(back_populates="cards")
 
 
+class PageBoard(Base):
+    __tablename__ = "page_boards"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_uuid)
+    name: Mapped[str] = mapped_column(String(200), default="Nouvelles Pages")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    session_id: Mapped[str | None] = mapped_column(String(12), ForeignKey("course_sessions.id"), nullable=True, default=None)
+
+    pages: Mapped[list["Page"]] = relationship(back_populates="board", cascade="all, delete-orphan")
+
+
+class Page(Base):
+    __tablename__ = "pages"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    board_id: Mapped[str] = mapped_column(String(32), ForeignKey("page_boards.id"), index=True)
+    # self-referencing: a page tree node. None = root-level page.
+    parent_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("pages.id"), nullable=True, index=True)
+    order_index: Mapped[int] = mapped_column(Integer, default=0)  # order among siblings (same parent_id)
+    title: Mapped[str] = mapped_column(String(200), default="Nouvelle page")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    board: Mapped["PageBoard"] = relationship(back_populates="pages")
+    parent: Mapped["Page | None"] = relationship("Page", remote_side=[id], back_populates="children")
+    children: Mapped[list["Page"]] = relationship(
+        "Page", back_populates="parent", cascade="all, delete-orphan", order_by="Page.order_index"
+    )
+    blocks: Mapped[list["PageBlock"]] = relationship(
+        back_populates="page", cascade="all, delete-orphan", order_by="PageBlock.order_index"
+    )
+
+
+class PageBlock(Base):
+    __tablename__ = "page_blocks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    page_id: Mapped[int] = mapped_column(Integer, ForeignKey("pages.id"), index=True)
+    order_index: Mapped[int] = mapped_column(Integer, default=0)
+    type: Mapped[str] = mapped_column(String(20))  # "text" | "image" | "table" | "link" | "code"
+    data: Mapped[dict] = mapped_column(JSON, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    page: Mapped["Page"] = relationship(back_populates="blocks")
+
+
 class CoursePresentation(Base):
     # one row per session: which course file the teacher is currently
     # presenting, where they currently are in it, and which slides have
@@ -186,7 +232,7 @@ class QcmAnswer(Base):
     qcm_session_id: Mapped[int] = mapped_column(Integer, ForeignKey("qcm_sessions.id"), index=True)
     user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id"))
     question_index: Mapped[int] = mapped_column(Integer)
-    status: Mapped[str] = mapped_column(String(20), default="not_seen")  # "not_seen" | "validated" | "deferred"
+    status: Mapped[str] = mapped_column(String(20), default="not_seen")  # "not_seen" | "validated" | "deferred" | "skipped"
     selected_options: Mapped[list] = mapped_column(JSON, default=list)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -195,7 +241,7 @@ class ActivityLog(Base):
     __tablename__ = "activity_log"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    tool_type: Mapped[str] = mapped_column(String(20))  # "gantt" | "whiteboard" | "kanban"
+    tool_type: Mapped[str] = mapped_column(String(20))  # "gantt" | "whiteboard" | "kanban" | "pages"
     tool_id: Mapped[str] = mapped_column(String(32), index=True)
     # nullable: anonymous visitors (no account) can act on tools with no
     # session attached — actor_label still carries a human-readable "Anonyme"
